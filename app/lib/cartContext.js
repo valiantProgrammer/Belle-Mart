@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { authApi } from "./api";
 import Cookies from "js-cookie";
 
@@ -54,14 +54,15 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const value = {
+    // Memoize the context value to prevent unnecessary re-renders of consumers
+    const value = useMemo(() => ({
         cart,
         loading,
         fetchCart,
         updateCart: updateCartState,
         // We calculate the number of unique items here for the badge
         itemCount: cart?.items?.length || 0,
-    };
+    }), [cart, loading, fetchCart, updateCartState]);
 
     return (
         <CartContext.Provider value={value}>

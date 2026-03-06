@@ -21,12 +21,14 @@ export default function Navigation() {
   const { itemCount } = useCart();
 
   useEffect(() => {
+    // Set initial state based on current scroll position
+    setIsScrolled(window.scrollY > 10);
+    
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 10);
+      setIsScrolled(window.scrollY > 10);
     };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   useEffect(() => {

@@ -1,7 +1,7 @@
 // components/products/ProductGrid.js
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { productsApi } from "../../lib/api";
 import ProductCard from "./ProductCard";
@@ -12,20 +12,27 @@ function ProductGridContent() {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams(searchParams.toString());
-        const products = await productsApi.getProducts(params);
-        setProducts(products);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
+  // Memoize the string representation of search params to get stable reference
+  const searchParamsString = useMemo(() => {
+    return searchParams.toString();
   }, [searchParams]);
+
+  // Memoize the fetch function to prevent unnecessary re-renders
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams(searchParamsString);
+      const products = await productsApi.getProducts(params);
+      setProducts(products);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParamsString]);
+
+  // Only fetch when searchParamsString actually changes (not just reference change)
+  useEffect(() => {
+    fetchProducts();
+  }, [searchParamsString, fetchProducts]);
 
   if (loading) {
     return (

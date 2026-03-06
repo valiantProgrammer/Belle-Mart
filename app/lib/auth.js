@@ -1,5 +1,4 @@
 import { SignJWT, jwtVerify } from "jose";
-import { webcrypto as crypto } from "crypto";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET_KEY || "fallback-secret-change-in-production"
@@ -10,15 +9,15 @@ const REFRESH_TOKEN_EXPIRY = "30d";
 
 // Hash password with PBKDF2
 export const hashPassword = async (password) => {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const keyMaterial = await crypto.subtle.importKey(
+  const salt = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await globalThis.crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
     { name: "PBKDF2" },
     false,
     ["deriveBits"]
   );
-  const key = await crypto.subtle.deriveBits(
+  const key = await globalThis.crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
       salt,
@@ -39,14 +38,14 @@ export const verifyPassword = async (password, hashedPassword) => {
   const salt = Buffer.from(saltHex, "hex");
   const storedKey = Buffer.from(keyHex, "hex");
 
-  const keyMaterial = await crypto.subtle.importKey(
+  const keyMaterial = await globalThis.crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
     { name: "PBKDF2" },
     false,
     ["deriveBits"]
   );
-  const derivedKey = await crypto.subtle.deriveBits(
+  const derivedKey = await globalThis.crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
       salt,
@@ -94,7 +93,7 @@ export const verifyToken = async (token) => {
       return null;
     }
 
-    if(token.startsWith("Bearer ")) {
+    if(token.startsWith('Bearer ')) {
       token = token.slice(7).trim();
     }
 
@@ -103,8 +102,8 @@ export const verifyToken = async (token) => {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return payload;
   } catch (error) {
-    console.log("Token verification error:", error);
-    console.log("Token recieved: ", token);
+    console.log('Token verification error:', error);
+    console.log('Token recieved: ', token);
     console.error("Token verification failed:", error.message);
     return null;
   }
@@ -114,10 +113,10 @@ export const verifyToken = async (token) => {
 export const extractTokenFromRequest = (request) => {
   const authHeader = request.headers.get("Authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
-    console.log("Authorization header:", authHeader);
+    console.log('Authorization header:', authHeader);
     return authHeader.slice(7).trim() || null;
   }
-  console.log("Authorization header:", authHeader);
+  console.log('Authorization header:', authHeader);
 
   const cookieHeader = request.headers.get("cookie");
   if (cookieHeader) {

@@ -2,9 +2,46 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 
-function ProductFiltersContent({ isOpen, onClose }) {
+// Module-level cache to share filter data across multiple instances
+let filterCache = null;
+let filterCachePromise = null;
+
+async function fetchFilterOptions() {
+  // Return cached data if available
+  if (filterCache) {
+    return filterCache;
+  }
+  
+  // Return pending promise to avoid duplicate requests
+  if (filterCachePromise) {
+    return filterCachePromise;
+  }
+
+  // Create new promise and cache it
+  filterCachePromise = fetch('/api/products/filters')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch filter options');
+      }
+      return response.json();
+    })
+    .then(data => {
+      filterCache = data; // Cache for future calls
+      filterCachePromise = null;
+      return data;
+    })
+    .catch(error => {
+      console.error(error);
+      filterCachePromise = null;
+      return { categories: [], brands: [] };
+    });
+
+  return filterCachePromise;
+}
+
+export default function ProductFilters({ isOpen, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -23,6 +60,7 @@ function ProductFiltersContent({ isOpen, onClose }) {
   // New state for dynamic filter options and loading
   const [filterOptions, setFilterOptions] = useState({ categories: [], brands: [] });
   const [loading, setLoading] = useState(true);
+  const hasFetchedRef = useRef(false);
 
   // Hardcoded options that are not fetched from DB
   const priceRanges = [
@@ -47,31 +85,25 @@ function ProductFiltersContent({ isOpen, onClose }) {
     { value: "2", label: "2★ & up" },
   ];
 
-  // Fetch dynamic filter options on component mount
+  // Fetch dynamic filter options on component mount - with caching
   useEffect(() => {
-    const fetchFilterOptions = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/products/filters");
-        if (!response.ok) {
-          throw new Error("Failed to fetch filter options");
-        }
-        const data = await response.json();
+    // Prevent multiple fetches from same component
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    setLoading(true);
+    fetchFilterOptions()
+      .then(data => {
         setFilterOptions(data);
-      } catch (error) {
-        console.error(error);
-        // Set empty arrays on error to prevent crashes
-        setFilterOptions({ categories: [], brands: [] });
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-    fetchFilterOptions();
+      });
   }, []);
 
-  // useEffect for updating URL params remains the same
+  // useEffect for updating URL params - NO searchParams in deps to prevent circular loop
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
 
     if (filters.category) params.set("category", filters.category);
     else params.delete("category");
@@ -94,7 +126,7 @@ function ProductFiltersContent({ isOpen, onClose }) {
     else params.delete("shipping");
 
     router.replace(`${pathname}?${params.toString()}`);
-  }, [filters, router, pathname, searchParams]);
+  }, [filters, router, pathname]);
   
   // handleFilterChange and clearFilters functions remain the same
   const handleFilterChange = (name, value) => {
@@ -138,7 +170,7 @@ function ProductFiltersContent({ isOpen, onClose }) {
           className="w-full text-black p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
           disabled={loading}
         >
-          <option value="">{loading ? "Loading..." : "All Categories"}</option>
+          <option value="">{loading ? 'Loading...' : 'All Categories'}</option>
           {filterOptions.categories.map((category) => (
             <option key={category} value={category}>
               {category}
@@ -174,7 +206,7 @@ function ProductFiltersContent({ isOpen, onClose }) {
           className="w-full text-black p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
           disabled={loading}
         >
-          <option value="">{loading ? "Loading..." : "All Brands"}</option>
+          <option value="">{loading ? 'Loading...' : 'All Brands'}</option>
           {filterOptions.brands.map((brand) => (
             <option key={brand} value={brand}>
               {brand}
@@ -260,13 +292,5 @@ function ProductFiltersContent({ isOpen, onClose }) {
         </div>
       )}
     </>
-  );
-}
-
-export default function ProductFilters({ isOpen, onClose }) {
-  return (
-    <Suspense fallback={<div className="p-4">Loading filters...</div>}>
-      <ProductFiltersContent isOpen={isOpen} onClose={onClose} />
-    </Suspense>
   );
 }

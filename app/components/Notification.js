@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useMemo } from "react";
 import BunnyNotification from "../components/ui/BunnyNotification";
 
 const NotificationContext = createContext();
@@ -22,8 +22,11 @@ export const NotificationProvider = ({ children }) => {
     setNotification((prev) => ({ ...prev, visible: false }));
   };
 
+  // Memoize the context value to prevent unnecessary re-renders of consumers
+  const value = useMemo(() => ({ showNotification }), []);
+
   return (
-    <NotificationContext.Provider value={{ showNotification }}>
+    <NotificationContext.Provider value={value}>
       {children}
       {notification.visible && (
         <BunnyNotification

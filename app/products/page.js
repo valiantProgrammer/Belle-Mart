@@ -1,12 +1,12 @@
 // app/products/page.js
-"use client"; 
+'use client';
 
-import { useState, Suspense } from "react";
-import ProductGrid from "../components/products/ProductGrid";
-import ProductFilters from "../components/products/ProductFilters";
-import LoadingSpinner from "../components/ui/LoadingSpinner";
-import Nav from "../components/Navi";
-import { SlidersHorizontal } from "lucide-react";
+import { useState, Suspense } from 'react';
+import ProductGrid from '../components/products/ProductGrid';
+import ProductFilters from '../components/products/ProductFilters';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Nav from '../components/Navi';
+import { SlidersHorizontal } from 'lucide-react';
 
 export default function ProductsPage({ searchParams }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -16,22 +16,23 @@ export default function ProductsPage({ searchParams }) {
       <Nav />
       <div className="flex h-screen pt-16">
         
-        {/* Left Aside: Filters */}
-        {/* Added `no-scrollbar` class to hide the scrollbar while keeping it scrollable */}
+        {/* Desktop Sidebar - First instance of ProductFilters (fetches API) */}
         <aside className="hidden lg:block w-64 h-full flex-shrink-0 overflow-y-auto bg-white border-r border-gray-200 no-scrollbar">
           <div className="p-4">
-            <ProductFilters />
+            <Suspense fallback={<LoadingSpinner size="small" />}>
+              <ProductFilters />
+            </Suspense>
           </div>
         </aside>
 
-        {/* Right Aside: Product Cards */}
+        {/* Main Content Area */}
         <aside className="flex-grow h-full flex flex-col items-center overflow-y-auto bg-slate-50">
-          <main className="p-4 lg:p-6">
+          <main className="p-4 lg:p-6 w-full">
             {/* Mobile Filter Button */}
             <div className="lg:hidden mb-4">
               <button 
-                onClick={() => setIsFilterOpen(true)}
-                className="flex items-center gap-2 w-full justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 <SlidersHorizontal size={16} />
                 <span>Filters</span>
@@ -44,11 +45,33 @@ export default function ProductsPage({ searchParams }) {
             </Suspense>
           </main>
         </aside>
-        
       </div>
-      
-      {/* Mobile drawer for filters */}
-      <ProductFilters isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
+
+      {/* Mobile Filter Drawer - Second instance uses cached API data */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsFilterOpen(false)}
+          />
+          <div className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg overflow-y-auto">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+              <Suspense fallback={<LoadingSpinner size="small" />}>
+                <ProductFilters />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

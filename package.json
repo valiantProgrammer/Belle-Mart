@@ -16,7 +16,7 @@
     "@googlemaps/js-api-loader": "^1.16.10",
     "@react-google-maps/api": "^2.20.7",
     "@types/google.maps": "^3.58.1",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "cloudinary": "^2.7.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
@@ -28,7 +28,7 @@
     "mongodb": "^6.5.0",
     "mongoose": "^8.17.1",
     "multer": "^2.0.2",
-    "next": "^15.5.2",
+    "next": "^16.1.6",
     "nodemailer": "^7.0.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -36,14 +36,13 @@
     "react-leaflet": "^5.0.0",
     "react-lottie-player": "^2.1.0",
     "react-toastify": "^11.0.5",
-    "script": "^0.1.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "15.4.5",
+    "eslint-config-next": "^16.1.6",
     "tailwindcss": "^4"
   }
 }

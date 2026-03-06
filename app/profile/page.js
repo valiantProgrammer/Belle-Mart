@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
@@ -82,7 +82,8 @@ export default function ProfilePage() {
     const mapRef = useRef(null);
     const markerRef = useRef(null);
     const router = useRouter();
-    const fetchAllData = async () => {
+    
+    const fetchAllData = useCallback(async () => {
         try {
             setLoading(true);
             const r = isExist();
@@ -109,7 +110,8 @@ export default function ProfilePage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
+    
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
